@@ -62,59 +62,59 @@ public sealed class Device : NativeModule {
 
 
     [Foreign(Language.Java)]
-	public static extern(Android) string GetCurrentLocale()
-	@{
-		Locale loc = java.util.Locale.getDefault();
+    public static extern(Android) string GetCurrentLocale()
+    @{
+        Locale loc = java.util.Locale.getDefault();
 
-        final char separator = '-';
-        String language = loc.getLanguage();
-        String region   = loc.getCountry();
-        String variant  = loc.getVariant();
+	final char separator = '-';
+	String language = loc.getLanguage();
+	String region   = loc.getCountry();
+	String variant  = loc.getVariant();
+	
+	// special case for Norwegian Nynorsk since "NY" cannot be a variant as per BCP 47
+	// this goes before the string matching since "NY" wont pass the variant checks
+	if (language.equals("no") && region.equals("NO") && variant.equals("NY")) {
+	    language = "nn";
+	    region   = "NO";
+	    variant  = "";
+	}
+	
+	if (language.isEmpty() || !language.matches("\\p{Alpha}{2,8}")) {
+	    language = "und"; // "und" for Undetermined
+	} else if (language.equals("iw")) {
+	    language = "he";  // correct deprecated "Hebrew"
+	} else if (language.equals("in")) {
+	    language = "id";  // correct deprecated "Indonesian"
+	} else if (language.equals("ji")) {
+	    language = "yi";   // correct deprecated "Yiddish"
+	}
+	
+	// ensure valid country code, if not well formed, it's omitted
+	if (!region.matches("\\p{Alpha}{2}|\\p{Digit}{3}")) {
+	    region = "";
+	}
+	
+	// variant subtags that begin with a letter must be at least 5 characters long
+	if (!variant.matches("\\p{Alnum}{5,8}|\\p{Digit}\\p{Alnum}{3}")) {
+	    variant = "";
+	}
+	
+	StringBuilder bcp47Tag = new StringBuilder(language);
+	if (!region.isEmpty()) {
+	    bcp47Tag.append(separator).append(region);
+	}
+	
+	if (!variant.isEmpty()) {
+	    bcp47Tag.append(separator).append(variant);
+	}
+	
+	return bcp47Tag.toString();
+    @}
 
-        // special case for Norwegian Nynorsk since "NY" cannot be a variant as per BCP 47
-        // this goes before the string matching since "NY" wont pass the variant checks
-        if (language.equals("no") && region.equals("NO") && variant.equals("NY")) {
-            language = "nn";
-            region   = "NO";
-            variant  = "";
-        }
-
-        if (language.isEmpty() || !language.matches("\\p{Alpha}{2,8}")) {
-            language = "und"; // "und" for Undetermined
-        } else if (language.equals("iw")) {
-            language = "he";  // correct deprecated "Hebrew"
-        } else if (language.equals("in")) {
-            language = "id";  // correct deprecated "Indonesian"
-        } else if (language.equals("ji")) {
-            language = "yi";   // correct deprecated "Yiddish"
-        }
-
-        // ensure valid country code, if not well formed, it's omitted
-        if (!region.matches("\\p{Alpha}{2}|\\p{Digit}{3}")) {
-            region = "";
-        }
-
-         // variant subtags that begin with a letter must be at least 5 characters long
-        if (!variant.matches("\\p{Alnum}{5,8}|\\p{Digit}\\p{Alnum}{3}")) {
-            variant = "";
-        }
-
-        StringBuilder bcp47Tag = new StringBuilder(language);
-        if (!region.isEmpty()) {
-            bcp47Tag.append(separator).append(region);
-        }
-
-        if (!variant.isEmpty()) {
-            bcp47Tag.append(separator).append(variant);
-        }
-
-        return bcp47Tag.toString();
-	@}
-
-	[Foreign(Language.ObjC)]
-	public static extern(iOS) string GetCurrentLocale()
-	@{
-		NSString* language = NSLocale.preferredLanguages[0];
+    [Foreign(Language.ObjC)]
+    public static extern(iOS) string GetCurrentLocale()
+    @{
+        NSString* language = NSLocale.preferredLanguages[0];
 
         if (language.length <= 2) {
             NSLocale* locale        = NSLocale.currentLocale;
@@ -133,9 +133,9 @@ public sealed class Device : NativeModule {
         }
 
         return [language stringByReplacingOccurrencesOfString: @"_" withString: @"-"];
-	@}
+    @}
 
-	public static extern(!(iOS || Android)) string GetCurrentLocale() {
-		return "Default";
+    public static extern(!(iOS || Android)) string GetCurrentLocale() {
+        return "Default";
     }
 }
