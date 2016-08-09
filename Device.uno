@@ -1,17 +1,21 @@
-using Uno;
-using Uno.UX;
-using Uno.Text;
-using Uno.Compiler.ExportTargetInterop;
-
 using Fuse;
 using Fuse.Scripting;
 using Fuse.Reactive;
 
+using Uno;
+using Uno.UX;
+using Uno.Text;
+using Uno.Collections;
+using Uno.Compiler.ExportTargetInterop;
+
 [ForeignInclude(Language.Java, "android.app.Activity",
                                "android.content.Intent",
+                               "android.provider.Settings",
                                "java.lang.Object",
                                "java.util.regex",
                                "java.util.Locale")]
+
+[ForeignInclude(Language.ObjC, "sys/types.h", "sys/sysctl.h")]
 
 [UXGlobalModule]
 [UXGlobalResource("Device")]
@@ -21,6 +25,12 @@ public sealed class Device : NativeModule {
     public Device() {
         if (_instance != null) return;
         Resource.SetGlobalKey(_instance = this, "Device");
+        AddMember(new NativeProperty< string, object >("vendor", Vendor));
+        AddMember(new NativeProperty< string, object >("model", Model));
+        AddMember(new NativeProperty< string, object >("system", System));
+        AddMember(new NativeProperty< string, object >("systemVersion", SystemVersion));
+        AddMember(new NativeProperty< string, object >("SDKVersion", SDKVersion));
+
         AddMember(new NativeProperty< string, object >("UUID", UUID));
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale)); // return [language]-[region]-[variants] (e.g. zh-US-Hans, en-US, etc.)
     }
@@ -137,5 +147,106 @@ public sealed class Device : NativeModule {
 
     public static extern(!(iOS || Android)) string GetCurrentLocale() {
         return "Default";
+    }
+
+
+    // iOS's foreign implementations
+
+    [Foreign(Language.ObjC)]
+    public static extern(iOS) string Vendor()
+    @{
+        return @"Apple";
+    @}
+
+    [Foreign(Language.ObjC)]
+    public static extern(iOS) string Model()
+    @{
+        size_t hardwareModelSize;
+        sysctlbyname("hw.machine", NULL, &hardwareModelSize, NULL, 0);
+        char* hardwareModel = (char*)malloc(hardwareModelSize);
+
+        sysctlbyname("hw.machine", hardwareModel, &hardwareModelSize, NULL, 0);
+        NSString* model = [NSString stringWithUTF8String: hardwareModel];
+        free(hardwareModel);
+
+        return model;
+    @}
+
+    [Foreign(Language.ObjC)]
+    public static extern(iOS) string System()
+    @{
+        return @"iOS";
+    @}
+
+    [Foreign(Language.ObjC)]
+    public static extern(iOS) string SystemVersion()
+    @{
+        return UIDevice.currentDevice.systemVersion;
+    @}
+
+    [Foreign(Language.ObjC)]
+    public static extern(iOS) string SDKVersion()
+    @{
+        return UIDevice.currentDevice.systemVersion;
+    @}
+
+
+
+    // Android's foreign implementations
+
+    [Foreign(Language.Java)]
+    public static extern(Android) string Vendor()
+    @{
+        return android.os.Build.MANUFACTURER;
+    @}
+
+    [Foreign(Language.Java)]
+    public static extern(Android) string Model()
+    @{
+        return android.os.Build.MODEL;
+    @}
+
+    [Foreign(Language.Java)]
+    public static extern(Android) string System()
+    @{
+        if (android.os.Build.MANUFACTURER.equals("Amazon")) {
+            return "AmazonFireOS";
+        }
+        return "Android";
+    @}
+
+    [Foreign(Language.Java)]
+    public static extern(Android) string SystemVersion()
+    @{
+        return android.os.Build.VERSION.RELEASE;
+    @}
+
+    [Foreign(Language.Java)]
+    public static extern(Android) string SDKVersion()
+    @{
+        return android.os.Build.VERSION.SDK;
+    @}
+
+
+    // Preview's implementations
+
+    public static extern(!(iOS || Android)) string Vendor() {
+        return "Fuse";
+    }
+
+    public static extern(!(iOS || Android)) string Model() {
+		return "simulator";
+    }
+
+    public static extern(!(iOS || Android)) string System() {
+        return "Atom";
+    }
+
+    public static extern(!(iOS || Android)) string SystemVersion() {
+        return "";
+    }
+
+    public static extern(!(iOS || Android)) string SDKVersion() {
+        return "";
     }
 }
