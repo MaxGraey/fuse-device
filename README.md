@@ -20,7 +20,6 @@ Using [fusepm](https://github.com/bolav/fusepm)
 
 ```js
     var Device = require('Device');
-    var locale = Device.locale;
 
     console.log('Current device language: ' + Device.locale); // format in BCP-47 for all platforms
     console.log('Device UUID: ' + Device.UUID);
