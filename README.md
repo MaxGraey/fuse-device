@@ -24,8 +24,8 @@ Using [fusepm](https://github.com/bolav/fusepm)
     console.log('Current device language: ' + Device.locale); // format in BCP-47 for all platforms
     console.log('Device UUID: ' + Device.UUID);
 
-    console.log('Vendor name: ' + Device.vendor);
-    console.log('Model name: '  + Device.model);
-    console.log('Model name: '  + Device.system);
-    console.log('Model name: '  + Device.systemVersion);
+    console.log('Vendor name: '     + Device.vendor);
+    console.log('Model name: '      + Device.model);
+    console.log('System OS: '       + Device.system);
+    console.log('System version: '  + Device.systemVersion);
 ```
