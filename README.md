@@ -22,10 +22,12 @@ Using [fusepm](https://github.com/bolav/fusepm)
     var Device = require('Device');
 
     console.log('Current device language: ' + Device.locale); // format in BCP-47 for all platforms
-    console.log('Device UUID: ' + Device.UUID);
+    console.log('Device UUID: '             + Device.UUID);
 
-    console.log('Vendor name: '     + Device.vendor);
-    console.log('Model name: '      + Device.model);
-    console.log('System OS: '       + Device.system);
-    console.log('System version: '  + Device.systemVersion);
+    console.log('Vendor name: '        + Device.vendor);
+    console.log('Model name: '         + Device.model);
+    console.log('System: '             + Device.system);
+    console.log('System version: '     + Device.systemVersion);
+    console.log('System SDK ver: '     + Device.SDKVersion);
+    console.log('Logical processors: ' + Device.cores);
 ```
