@@ -22,6 +22,15 @@ using Uno.Compiler.ExportTargetInterop;
 public sealed class Device : NativeModule {
     static readonly Device _instance;
 
+    static string cachedVendorName;
+    static string cachedModelName;
+    static string cachedSystemName;
+    static string cachedSystemVersion;
+    static string cachedSDKVersion;
+    static double cachedNumProcessorCores = 0f;
+
+    static string cachedUUID;
+
     public Device() {
         if (_instance != null) return;
         Resource.SetGlobalKey(_instance = this, "Device");
@@ -30,27 +39,87 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< string, object >("system", System));
         AddMember(new NativeProperty< string, object >("systemVersion", SystemVersion));
         AddMember(new NativeProperty< string, object >("SDKVersion", SDKVersion));
+        AddMember(new NativeProperty< double, object >("cores", NumProcessorCores));
 
         AddMember(new NativeProperty< string, object >("UUID", UUID));
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale)); // return [language]-[region]-[variants] (e.g. zh-US-Hans, en-US, etc.)
     }
 
+
+    public static string UUID() {
+        if (cachedUUID != null) {
+            return cachedUUID;
+        }
+        cachedUUID = GetUUID();
+        return cachedUUID;
+    }
+
+    public static string Vendor() {
+        if (cachedVendorName != null) {
+            return cachedVendorName;
+        }
+        cachedVendorName = GetVendor();
+        return cachedVendorName;
+    }
+
+    public static string Model() {
+        if (cachedModelName != null) {
+            return cachedModelName;
+        }
+        cachedModelName = GetModel();
+        return cachedModelName;
+    }
+
+    public static string System() {
+        if (cachedSystemName != null) {
+            return cachedSystemName;
+        }
+        cachedSystemName = GetSystem();
+        return cachedSystemName;
+    }
+
+    public static string SystemVersion() {
+        if (cachedSystemVersion != null) {
+            return cachedSystemVersion;
+        }
+        cachedSystemVersion = GetSystemVersion();
+        return cachedSystemVersion;
+    }
+
+    public static string SDKVersion() {
+        if (cachedSDKVersion != null) {
+            return cachedSDKVersion;
+        }
+        cachedSDKVersion = GetSDKVersion();
+        return cachedSDKVersion;
+    }
+
+    public static double NumProcessorCores() {
+        if (cachedNumProcessorCores != 0f) {
+            return cachedNumProcessorCores;
+        }
+
+        cachedNumProcessorCores = (double)GetNumProcessorCores();
+        return cachedNumProcessorCores;
+    }
+
+
     // UUID platform specific implementations
     [Foreign(Language.Java)]
-    public static extern(Android) string UUID()
+    private static extern(Android) string GetUUID()
     @{
         android.app.Activity context = com.fuse.Activity.getRootActivity();
         return android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
     @}
 
     [Foreign(Language.ObjC)]
-    public static extern(iOS) string UUID()
+    private static extern(iOS) string GetUUID()
     @{
         return [NSUUID.UUID UUIDString]; // iOS >= 6.x
     @}
 
 
-    public static extern(!(iOS || Android)) string UUID() {
+    private static extern(!(iOS || Android)) string GetUUID() {
         // non-safe UUID version. According to RFC 4122 version 4
         Random rnd = new Random(43812467);
         byte[] bytes = new byte[16];
@@ -72,59 +141,59 @@ public sealed class Device : NativeModule {
 
 
     [Foreign(Language.Java)]
-    public static extern(Android) string GetCurrentLocale()
-    @{
-        Locale loc = java.util.Locale.getDefault();
+	public static extern(Android) string GetCurrentLocale()
+	@{
+		Locale loc = java.util.Locale.getDefault();
 
-	final char separator = '-';
-	String language = loc.getLanguage();
-	String region   = loc.getCountry();
-	String variant  = loc.getVariant();
-	
-	// special case for Norwegian Nynorsk since "NY" cannot be a variant as per BCP 47
-	// this goes before the string matching since "NY" wont pass the variant checks
-	if (language.equals("no") && region.equals("NO") && variant.equals("NY")) {
-	    language = "nn";
-	    region   = "NO";
-	    variant  = "";
-	}
-	
-	if (language.isEmpty() || !language.matches("\\p{Alpha}{2,8}")) {
-	    language = "und"; // "und" for Undetermined
-	} else if (language.equals("iw")) {
-	    language = "he";  // correct deprecated "Hebrew"
-	} else if (language.equals("in")) {
-	    language = "id";  // correct deprecated "Indonesian"
-	} else if (language.equals("ji")) {
-	    language = "yi";   // correct deprecated "Yiddish"
-	}
-	
-	// ensure valid country code, if not well formed, it's omitted
-	if (!region.matches("\\p{Alpha}{2}|\\p{Digit}{3}")) {
-	    region = "";
-	}
-	
-	// variant subtags that begin with a letter must be at least 5 characters long
-	if (!variant.matches("\\p{Alnum}{5,8}|\\p{Digit}\\p{Alnum}{3}")) {
-	    variant = "";
-	}
-	
-	StringBuilder bcp47Tag = new StringBuilder(language);
-	if (!region.isEmpty()) {
-	    bcp47Tag.append(separator).append(region);
-	}
-	
-	if (!variant.isEmpty()) {
-	    bcp47Tag.append(separator).append(variant);
-	}
-	
-	return bcp47Tag.toString();
-    @}
+        final char separator = '-';
+        String language = loc.getLanguage();
+        String region   = loc.getCountry();
+        String variant  = loc.getVariant();
 
-    [Foreign(Language.ObjC)]
-    public static extern(iOS) string GetCurrentLocale()
-    @{
-        NSString* language = NSLocale.preferredLanguages[0];
+        // special case for Norwegian Nynorsk since "NY" cannot be a variant as per BCP 47
+        // this goes before the string matching since "NY" wont pass the variant checks
+        if (language.equals("no") && region.equals("NO") && variant.equals("NY")) {
+            language = "nn";
+            region   = "NO";
+            variant  = "";
+        }
+
+        if (language.isEmpty() || !language.matches("\\p{Alpha}{2,8}")) {
+            language = "und"; // "und" for Undetermined
+        } else if (language.equals("iw")) {
+            language = "he";  // correct deprecated "Hebrew"
+        } else if (language.equals("in")) {
+            language = "id";  // correct deprecated "Indonesian"
+        } else if (language.equals("ji")) {
+            language = "yi";   // correct deprecated "Yiddish"
+        }
+
+        // ensure valid country code, if not well formed, it's omitted
+        if (!region.matches("\\p{Alpha}{2}|\\p{Digit}{3}")) {
+            region = "";
+        }
+
+         // variant subtags that begin with a letter must be at least 5 characters long
+        if (!variant.matches("\\p{Alnum}{5,8}|\\p{Digit}\\p{Alnum}{3}")) {
+            variant = "";
+        }
+
+        StringBuilder bcp47Tag = new StringBuilder(language);
+        if (!region.isEmpty()) {
+            bcp47Tag.append(separator).append(region);
+        }
+
+        if (!variant.isEmpty()) {
+            bcp47Tag.append(separator).append(variant);
+        }
+
+        return bcp47Tag.toString();
+	@}
+
+	[Foreign(Language.ObjC)]
+	private static extern(iOS) string GetCurrentLocale()
+	@{
+		NSString* language = NSLocale.preferredLanguages[0];
 
         if (language.length <= 2) {
             NSLocale* locale        = NSLocale.currentLocale;
@@ -143,23 +212,23 @@ public sealed class Device : NativeModule {
         }
 
         return [language stringByReplacingOccurrencesOfString: @"_" withString: @"-"];
-    @}
+	@}
 
-    public static extern(!(iOS || Android)) string GetCurrentLocale() {
-        return "Default";
+	public static extern(!(iOS || Android)) string GetCurrentLocale() {
+		return "Default";
     }
 
 
     // iOS's foreign implementations
 
     [Foreign(Language.ObjC)]
-    public static extern(iOS) string Vendor()
+    private static extern(iOS) string GetVendor()
     @{
         return @"Apple";
     @}
 
     [Foreign(Language.ObjC)]
-    public static extern(iOS) string Model()
+    private static extern(iOS) string GetModel()
     @{
         size_t hardwareModelSize;
         sysctlbyname("hw.machine", NULL, &hardwareModelSize, NULL, 0);
@@ -173,21 +242,35 @@ public sealed class Device : NativeModule {
     @}
 
     [Foreign(Language.ObjC)]
-    public static extern(iOS) string System()
+    private static extern(iOS) string GetSystem()
     @{
         return @"iOS";
     @}
 
     [Foreign(Language.ObjC)]
-    public static extern(iOS) string SystemVersion()
+    private static extern(iOS) string GetSystemVersion()
     @{
         return UIDevice.currentDevice.systemVersion;
     @}
 
     [Foreign(Language.ObjC)]
-    public static extern(iOS) string SDKVersion()
+    private static extern(iOS) string GetSDKVersion()
     @{
         return UIDevice.currentDevice.systemVersion;
+    @}
+
+    [Foreign(Language.ObjC)]
+    private static extern(iOS) uint GetNumProcessorCores()
+    @{
+        uint32_t ncpu = 0;
+        size_t size = sizeof(uint32_t);
+        if (sysctlbyname("hw.logicalcpu", &ncpu, &size, NULL, 0) != 0) {
+            if (sysctlbyname("hw.ncpu", &ncpu, &size, NULL, 0) != 0) {
+                ncpu = 1;
+            }
+        }
+
+        return ncpu;
     @}
 
 
@@ -195,19 +278,19 @@ public sealed class Device : NativeModule {
     // Android's foreign implementations
 
     [Foreign(Language.Java)]
-    public static extern(Android) string Vendor()
+    private static extern(Android) string GetVendor()
     @{
         return android.os.Build.MANUFACTURER;
     @}
 
     [Foreign(Language.Java)]
-    public static extern(Android) string Model()
+    private static extern(Android) string GetModel()
     @{
         return android.os.Build.MODEL;
     @}
 
     [Foreign(Language.Java)]
-    public static extern(Android) string System()
+    private static extern(Android) string GetSystem()
     @{
         if (android.os.Build.MANUFACTURER.equals("Amazon")) {
             return "AmazonFireOS";
@@ -216,37 +299,69 @@ public sealed class Device : NativeModule {
     @}
 
     [Foreign(Language.Java)]
-    public static extern(Android) string SystemVersion()
+    private static extern(Android) string GetSystemVersion()
     @{
         return android.os.Build.VERSION.RELEASE;
     @}
 
     [Foreign(Language.Java)]
-    public static extern(Android) string SDKVersion()
+    private static extern(Android) string GetSDKVersion()
     @{
         return android.os.Build.VERSION.SDK;
     @}
 
 
+    [Foreign(Language.Java)]
+    private static extern(Android) uint GetNumProcessorCores()
+    @{
+        if (android.os.Build.VERSION.SDK_INT >= 17) {
+            return Runtime.getRuntime().availableProcessors()
+        } else {
+            // Use saurabh64's answer
+            class CpuFilter implements FileFilter {
+                @Override
+                public boolean accept(File pathname) {
+                    if(Pattern.matches("cpu[0-9]+", pathname.getName())) {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+
+            try {
+                File dir = new File("/sys/devices/system/cpu/");
+                File[] files = dir.listFiles(new CpuFilter());
+                return files.length;
+            } catch (Exception e) {
+                return 1;
+            }
+        }
+    @}
+
+
     // Preview's implementations
 
-    public static extern(!(iOS || Android)) string Vendor() {
+    private static extern(!(iOS || Android)) string GetVendor() {
         return "Fuse";
     }
 
-    public static extern(!(iOS || Android)) string Model() {
+    private static extern(!(iOS || Android)) string GetModel() {
 		return "simulator";
     }
 
-    public static extern(!(iOS || Android)) string System() {
+    private static extern(!(iOS || Android)) string GetSystem() {
         return "Atom";
     }
 
-    public static extern(!(iOS || Android)) string SystemVersion() {
+    private static extern(!(iOS || Android)) string GetSystemVersion() {
         return "";
     }
 
-    public static extern(!(iOS || Android)) string SDKVersion() {
+    private static extern(!(iOS || Android)) string GetSDKVersion() {
         return "";
+    }
+
+    private static extern(!(iOS || Android)) uint GetNumProcessorCores() {
+        return 1;
     }
 }
