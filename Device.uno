@@ -18,7 +18,6 @@ using Uno.Compiler.ExportTargetInterop;
 [ForeignInclude(Language.ObjC, "sys/types.h", "sys/sysctl.h")]
 
 [UXGlobalModule]
-[UXGlobalResource("Device")]
 public sealed class Device : NativeModule {
     static readonly Device _instance;
 
@@ -31,9 +30,10 @@ public sealed class Device : NativeModule {
 
     static string cachedUUID;
 
-    public Device() {
+    public Device() : base() {
         if (_instance != null) return;
         Resource.SetGlobalKey(_instance = this, "Device");
+
         AddMember(new NativeProperty< string, object >("vendor", Vendor));
         AddMember(new NativeProperty< string, object >("model", Model));
         AddMember(new NativeProperty< string, object >("system", System));
@@ -42,7 +42,10 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< double, object >("cores", NumProcessorCores));
 
         AddMember(new NativeProperty< string, object >("UUID", UUID));
-        AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale)); // return [language]-[region]-[variants] (e.g. zh-US-Hans, en-US, etc.)
+        // [language]-[region]-[variants] (e.g. zh-EN-Hans, en-US, etc.)
+        AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale));
+
+        AddMember(new NativeProperty< bool, object >("isRetina", IsRetina));
     }
 
 
@@ -103,6 +106,10 @@ public sealed class Device : NativeModule {
         return cachedNumProcessorCores;
     }
 
+    public static bool IsRetina() {
+        return App.Current.RootViewport.PixelsPerPoint > 1f;
+    }
+
 
     // UUID platform specific implementations
     [Foreign(Language.Java)]
@@ -121,7 +128,7 @@ public sealed class Device : NativeModule {
 
     private static extern(!(iOS || Android)) string GetUUID() {
         // non-safe UUID version. According to RFC 4122 version 4
-        Random rnd = new Random(43812467);
+        Random rnd = new Random((int)(Time.FrameTime + 34525));
         byte[] bytes = new byte[16];
         const string chars = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
         int len = chars.Length;
@@ -272,8 +279,6 @@ public sealed class Device : NativeModule {
 
         return ncpu;
     @}
-
-
 
     // Android's foreign implementations
 
