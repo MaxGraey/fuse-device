@@ -121,7 +121,7 @@ public sealed class Device : NativeModule {
         //android.app.Activity context = com.fuse.Activity.getRootActivity();
         //return android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         final android.app.Activity context = com.fuse.Activity.getRootActivity();
-        final TelephonyManager tm = (TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+        final TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         final String deviceId     = "" + tm.getDeviceId();
         final String serialNum    = "" + tm.getSimSerialNumber();
         final String androidId    = "" + android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
