@@ -1,12 +1,12 @@
-using Fuse;
-using Fuse.Scripting;
-using Fuse.Reactive;
-
 using Uno;
 using Uno.UX;
 using Uno.Text;
 using Uno.Collections;
 using Uno.Compiler.ExportTargetInterop;
+
+using Fuse;
+using Fuse.Scripting;
+using Fuse.Reactive;
 
 [ForeignInclude(Language.Java, "android.app.Activity",
                                "android.content.Intent",
@@ -39,12 +39,16 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< string, object >("systemVersion", SystemVersion));
         AddMember(new NativeProperty< string, object >("SDKVersion", SDKVersion));
         AddMember(new NativeProperty< double, object >("cores", NumProcessorCores));
+        AddMember(new NativeProperty< bool,   object >("isRetina", IsRetina));
 
         AddMember(new NativeProperty< string, object >("UUID", UUID));
         // [language]-[region]-[variants] (e.g. zh-EN-Hans, en-US, etc.)
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale));
 
-        AddMember(new NativeProperty< bool, object >("isRetina", IsRetina));
+        var args = Environment.GetCommandLineArgs();
+        foreach (var arg in args) {
+            debug_log arg;
+        }
     }
 
 
@@ -330,21 +334,16 @@ public sealed class Device : NativeModule {
         if (android.os.Build.VERSION.SDK_INT >= 17) {
             return Runtime.getRuntime().availableProcessors()
         } else {
-            // Use saurabh64's answer
             class CpuFilter implements FileFilter {
                 @Override
                 public boolean accept(File pathname) {
-                    if(Pattern.matches("cpu[0-9]+", pathname.getName())) {
-                        return true;
-                    }
-                    return false;
+                    return Pattern.matches("cpu[0-9]+", pathname.getName()) ? true : false;
                 }
             }
 
             try {
                 File dir = new File("/sys/devices/system/cpu/");
-                File[] files = dir.listFiles(new CpuFilter());
-                return files.length;
+                return dir.listFiles(new CpuFilter()).length;
             } catch (Exception e) {
                 return 1;
             }
