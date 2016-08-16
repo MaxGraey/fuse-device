@@ -12,10 +12,7 @@ using Uno.Compiler.ExportTargetInterop;
                                "android.content.Intent",
                                "android.provider.Settings",
                                "android.telephony.TelephonyManager",
-                               "java.lang.Object",
-                               "java.util.regex",
-                               "java.util.Locale",
-                               "java.util.UUID")]
+                               "java.util.*")]
 
 [ForeignInclude(Language.ObjC, "sys/types.h", "sys/sysctl.h")]
 
