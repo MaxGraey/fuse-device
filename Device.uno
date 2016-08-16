@@ -366,7 +366,7 @@ public sealed class Device : NativeModule {
     }
 
     private static extern(!(iOS || Android)) string GetSystem() {
-        return "Atom";
+        return "Electron";
     }
 
     private static extern(!(iOS || Android)) string GetSystemVersion() {
