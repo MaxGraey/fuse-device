@@ -127,7 +127,7 @@ public sealed class Device : NativeModule {
         final String androidId    = "" + android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
 
         UUID deviceUuid = new UUID(androidId.hashCode(), ((long)deviceId.hashCode() << 32) | serialNum.hashCode());
-        String deviceId = deviceUuid.toString();
+        return deviceUuid.toString();
     @}
 
     [Foreign(Language.ObjC)]
