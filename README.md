@@ -30,4 +30,5 @@ Using [fusepm](https://github.com/bolav/fusepm)
     console.log('System version: '     + Device.systemVersion);
     console.log('System SDK ver: '     + Device.SDKVersion);
     console.log('Logical processors: ' + Device.cores);
+    console.log('is retina?: '         + Device.isRetina);
 ```
