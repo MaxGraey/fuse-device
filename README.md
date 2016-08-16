@@ -21,8 +21,12 @@ Using [fusepm](https://github.com/bolav/fusepm)
 ```js
     var Device = require('Device');
 
-    console.log('Current device language: ' + Device.locale); // format in BCP-47 for all platforms
+    console.log('Current device language: ' + Device.locale); // format in BCP-47 for all mobile platforms
+    // output example: en-US
+    
     console.log('Device UUID: '             + Device.UUID);
+     // output example:
+    // ios/android/preview: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
     console.log('Vendor name: '        + Device.vendor);
     console.log('Model name: '         + Device.model);
