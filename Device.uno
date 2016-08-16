@@ -44,11 +44,6 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< string, object >("UUID", UUID));
         // [language]-[region]-[variants] (e.g. zh-EN-Hans, en-US, etc.)
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale));
-
-        var args = Environment.GetCommandLineArgs();
-        foreach (var arg in args) {
-            debug_log arg;
-        }
     }
 
 
