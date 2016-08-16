@@ -11,6 +11,7 @@ using Uno.Compiler.ExportTargetInterop;
 [ForeignInclude(Language.Java, "android.app.Activity",
                                "android.content.Intent",
                                "android.provider.Settings",
+                               "android.telephony.TelephonyManager",
                                "java.lang.Object",
                                "java.util.regex",
                                "java.util.Locale")]
@@ -113,10 +114,19 @@ public sealed class Device : NativeModule {
 
     // UUID platform specific implementations
     [Foreign(Language.Java)]
+    [Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>")]
     private static extern(Android) string GetUUID()
     @{
-        android.app.Activity context = com.fuse.Activity.getRootActivity();
-        return android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        //android.app.Activity context = com.fuse.Activity.getRootActivity();
+        //return android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        final android.app.Activity context = com.fuse.Activity.getRootActivity();
+        final TelephonyManager tm = (TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+        final String deviceId     = "" + tm.getDeviceId();
+        final String serialNum    = "" + tm.getSimSerialNumber();
+        final String androidId    = "" + android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
+        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)deviceId.hashCode() << 32) | serialNum.hashCode());
+        String deviceId = deviceUuid.toString();
     @}
 
     [Foreign(Language.ObjC)]
