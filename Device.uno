@@ -9,10 +9,12 @@ using Fuse.Scripting;
 using Fuse.Reactive;
 
 [ForeignInclude(Language.Java, "android.app.Activity",
-                               "android.content.Intent",
                                "android.provider.Settings",
                                "android.telephony.TelephonyManager",
-                               "java.util.*")]
+                               "android.content.*",
+                               "java.util.regex.*",
+                               "java.util.*",
+                               "java.io.*")]
 
 [ForeignInclude(Language.ObjC, "sys/types.h", "sys/sysctl.h")]
 
@@ -120,7 +122,10 @@ public sealed class Device : NativeModule {
         final TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         final String deviceId     = "" + tm.getDeviceId();
         final String serialNum    = "" + tm.getSimSerialNumber();
-        final String androidId    = "" + android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        final String androidId    = "" + android.provider.Settings.Secure.getString(
+                                            context.getContentResolver(),
+                                            android.provider.Settings.Secure.ANDROID_ID
+                                         );
 
         UUID deviceUuid = new UUID(androidId.hashCode(), ((long)deviceId.hashCode() << 32) | serialNum.hashCode());
         return deviceUuid.toString();
@@ -327,7 +332,7 @@ public sealed class Device : NativeModule {
     private static extern(Android) uint GetNumProcessorCores()
     @{
         if (android.os.Build.VERSION.SDK_INT >= 17) {
-            return Runtime.getRuntime().availableProcessors()
+            return Runtime.getRuntime().availableProcessors();
         } else {
             class CpuFilter implements FileFilter {
                 @Override
@@ -337,7 +342,7 @@ public sealed class Device : NativeModule {
             }
 
             try {
-                File dir = new File("/sys/devices/system/cpu/");
+                File dir = new File("/sys/devices/system/cpu/possible");
                 return dir.listFiles(new CpuFilter()).length;
             } catch (Exception e) {
                 return 1;
