@@ -12,7 +12,8 @@
     "ObjC"
   ],
   "Includes": [
-    "*"
+    "*",
+    "../Device.uno"
   ],
   "Mobile": {
     "Orientations": "PortraitUpsideDown"

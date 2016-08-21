@@ -122,14 +122,11 @@ public sealed class Device : NativeModule {
 
     // UUID platform specific implementations
     [Foreign(Language.Java)]
-    //[Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.INTERNET\"/>")]
     [Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>")]
     [Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>")]
     [Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>")]
     private static extern(Android) string GetUUID()
     @{
-        //android.app.Activity context = com.fuse.Activity.getRootActivity();
-        //return android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         final android.app.Activity context = com.fuse.Activity.getRootActivity();
         final TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         final String deviceId     = "" + tm.getDeviceId();
@@ -160,23 +157,8 @@ public sealed class Device : NativeModule {
                 wifiManager.setWifiEnabled(false);
         }
 
-        //UUID deviceUuid = new UUID((((long)macAdressId << 32) + androidId.hashCode()),
-        //                            ((long)deviceId.hashCode() << 32) + serialNum.hashCode());
-
         long first  = ((long)macAdressId << 32)         + androidId.hashCode();
         long second = ((long)deviceId.hashCode() << 32) + serialNum.hashCode();
-
-        /*
-        byte[] bytes = ByteBuffer.allocate(2 * Long.SIZE / Byte.SIZE)
-          			   .putLong(first)
-          			   .putLong(second)
-                       .array();
-
-        int[] hashedUUID = md5.encode128(bytes);
-
-        first  = (long)hashedUUID[0] | (long)hashedUUID[1] << 32;
-        second = (long)hashedUUID[2] | (long)hashedUUID[3] << 32;
-        */
 
         byte[] bytes = ByteBuffer.allocate(2 * Long.SIZE / Byte.SIZE)
           			   .putLong(first)
@@ -393,24 +375,6 @@ public sealed class Device : NativeModule {
     [Foreign(Language.Java)]
     private static extern(Android) int GetNumProcessorCores()
     @{
-        /*if (android.os.Build.VERSION.SDK_INT >= 17) {
-            return Runtime.getRuntime().availableProcessors();
-        } else {
-            class CpuFilter implements FileFilter {
-                @Override
-                public boolean accept(File pathname) {
-                    return Pattern.matches("cpu[0-9]+", pathname.getName()) ? true : false;
-                }
-            }
-
-            try {
-                File dir = new File("/sys/devices/system/cpu/possible");
-                return dir.listFiles(new CpuFilter()).length;
-            } catch (Exception e) {
-                return 1;
-            }
-        }*/
-
         if (android.os.Build.VERSION.SDK_INT >= 17) {
             return Runtime.getRuntime().availableProcessors();
         } else {
