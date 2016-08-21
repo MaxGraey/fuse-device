@@ -12,8 +12,12 @@ using Fuse.Reactive;
                                "android.provider.Settings",
                                "android.telephony.TelephonyManager",
                                "android.content.*",
+                               "android.net.wifi.*",
+                               "java.security.*",
                                "java.util.regex.*",
                                "java.util.*",
+                               "java.net.*",
+                               "java.nio.*",
                                "java.io.*")]
 
 [ForeignInclude(Language.ObjC, "sys/types.h", "sys/sysctl.h")]
@@ -41,6 +45,7 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< string, object >("systemVersion", SystemVersion));
         AddMember(new NativeProperty< string, object >("SDKVersion", SDKVersion));
         AddMember(new NativeProperty< double, object >("cores", NumProcessorCores));
+        AddMember(new NativeProperty< double, object >("displayScale", PixelsPerPoint));
         AddMember(new NativeProperty< bool,   object >("isRetina", IsRetina));
 
         AddMember(new NativeProperty< string, object >("UUID", UUID));
@@ -107,13 +112,20 @@ public sealed class Device : NativeModule {
     }
 
     public static bool IsRetina() {
-        return App.Current.RootViewport.PixelsPerPoint > 1f;
+        return Device.PixelsPerPoint() > 1f;
+    }
+
+    public static double PixelsPerPoint() {
+        return App.Current.RootViewport.PixelsPerPoint;
     }
 
 
     // UUID platform specific implementations
     [Foreign(Language.Java)]
+    //[Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.INTERNET\"/>")]
     [Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>")]
+    [Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>")]
+    [Require("AndroidManifest.RootElement", "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>")]
     private static extern(Android) string GetUUID()
     @{
         //android.app.Activity context = com.fuse.Activity.getRootActivity();
@@ -127,8 +139,57 @@ public sealed class Device : NativeModule {
                                             android.provider.Settings.Secure.ANDROID_ID
                                          );
 
-        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)deviceId.hashCode() << 32) | serialNum.hashCode());
-        return deviceUuid.toString();
+        int macAdressId;
+
+        try {
+            // try getting MAC-adress via NetworkInterface
+            final InetAddress ip = InetAddress.getLocalHost();
+            final NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+            macAdressId = network.getHardwareAddress().hashCode();
+        } catch (Throwable e) {
+            // else getting MAC-adress via WifiManager
+            final WifiManager wifiManager = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+            final boolean     wifiEnabled = wifiManager.isWifiEnabled();
+
+            if (!wifiEnabled)
+                wifiManager.setWifiEnabled(true);
+
+            macAdressId = wifiManager.getConnectionInfo().getMacAddress().hashCode();
+
+            if (!wifiEnabled)
+                wifiManager.setWifiEnabled(false);
+        }
+
+        //UUID deviceUuid = new UUID((((long)macAdressId << 32) + androidId.hashCode()),
+        //                            ((long)deviceId.hashCode() << 32) + serialNum.hashCode());
+
+        long first  = ((long)macAdressId << 32)         + androidId.hashCode();
+        long second = ((long)deviceId.hashCode() << 32) + serialNum.hashCode();
+
+        /*
+        byte[] bytes = ByteBuffer.allocate(2 * Long.SIZE / Byte.SIZE)
+          			   .putLong(first)
+          			   .putLong(second)
+                       .array();
+
+        int[] hashedUUID = md5.encode128(bytes);
+
+        first  = (long)hashedUUID[0] | (long)hashedUUID[1] << 32;
+        second = (long)hashedUUID[2] | (long)hashedUUID[3] << 32;
+        */
+
+        byte[] bytes = ByteBuffer.allocate(2 * Long.SIZE / Byte.SIZE)
+          			   .putLong(first)
+          			   .putLong(second)
+                       .array();
+
+        byte[] hashedUUID = new byte[16];
+
+        try {
+            hashedUUID = MessageDigest.getInstance("MD5").digest(bytes);
+        } catch (NoSuchAlgorithmException e) {}
+
+        return UUID.nameUUIDFromBytes(hashedUUID).toString().toUpperCase();
     @}
 
     [Foreign(Language.ObjC)]
@@ -137,9 +198,10 @@ public sealed class Device : NativeModule {
         return [NSUUID.UUID UUIDString]; // iOS >= 6.x
     @}
 
-
+    // Preview version
+    // UUID generate randomly every launch time
     private static extern(!(iOS || Android)) string GetUUID() {
-        // non-safe UUID version. According to RFC 4122 version 4
+        // According to RFC 4122 version 4
         Random rnd = new Random((int)(Time.FrameTime + 34525));
         byte[] bytes = new byte[16];
         const string chars = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
@@ -234,7 +296,7 @@ public sealed class Device : NativeModule {
 	@}
 
 	public static extern(!(iOS || Android)) string GetCurrentLocale() {
-		return "Default";
+		return "en-EN";
     }
 
 
@@ -279,7 +341,7 @@ public sealed class Device : NativeModule {
     @}
 
     [Foreign(Language.ObjC)]
-    private static extern(iOS) uint GetNumProcessorCores()
+    private static extern(iOS) int GetNumProcessorCores()
     @{
         uint32_t ncpu = 0;
         size_t size = sizeof(uint32_t);
@@ -289,7 +351,7 @@ public sealed class Device : NativeModule {
             }
         }
 
-        return ncpu;
+        return (int32_t)ncpu;
     @}
 
     // Android's foreign implementations
@@ -329,9 +391,9 @@ public sealed class Device : NativeModule {
 
 
     [Foreign(Language.Java)]
-    private static extern(Android) uint GetNumProcessorCores()
+    private static extern(Android) int GetNumProcessorCores()
     @{
-        if (android.os.Build.VERSION.SDK_INT >= 17) {
+        /*if (android.os.Build.VERSION.SDK_INT >= 17) {
             return Runtime.getRuntime().availableProcessors();
         } else {
             class CpuFilter implements FileFilter {
@@ -347,6 +409,27 @@ public sealed class Device : NativeModule {
             } catch (Exception e) {
                 return 1;
             }
+        }*/
+
+        if (android.os.Build.VERSION.SDK_INT >= 17) {
+            return Runtime.getRuntime().availableProcessors();
+        } else {
+            try {
+                int cores = 1;
+                Process proc = Runtime.getRuntime().exec("/usr/bin/nproc");
+                BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+                String line;
+                while ((line = input.readLine()) != null)
+                    cores = line.length() > 0 ? Integer.parseInt(line) : 1;
+
+                input.close();
+                proc.waitFor();
+                return cores;
+
+            } finally {
+                return 1;
+            }
         }
     @}
 
@@ -354,15 +437,15 @@ public sealed class Device : NativeModule {
     // Preview's implementations
 
     private static extern(!(iOS || Android)) string GetVendor() {
-        return "Fuse";
+        return "Fusetools";
     }
 
     private static extern(!(iOS || Android)) string GetModel() {
-		return "simulator";
+		return "Preview";
     }
 
     private static extern(!(iOS || Android)) string GetSystem() {
-        return "Electron";
+        return "Fuse";
     }
 
     private static extern(!(iOS || Android)) string GetSystemVersion() {

@@ -1,0 +1,59 @@
+<App ClearColor="#000">
+    <JavaScript>
+        var Observable = require('FuseJS/Observable');
+        var Device     = require('Device');
+
+        console.log('UUID:',   Device.UUID);
+        console.log('locale:', Device.locale);
+        console.log('system:', Device.system + " " + Device.systemVersion);
+        console.log('SDK:',    Device.SDKVersion);
+        console.log('device:', Device.vendor + " " + Device.model);
+        console.log('cores:',  Device.cores);
+        console.log('retina:', Device.isRetina);
+
+        module.exports = {
+            name:     Device.vendor + " " + Device.model,
+            uuid:     Device.UUID,
+            locale:   Device.locale,
+            cores:    Device.cores,
+            isRetina: Device.isRetina
+        };
+    </JavaScript>
+
+    <Panel ux:Class="TextBlock" Title="" Content="" ContentFontSize="16" Last="false" Margin="8">
+        <string ux:Property="Title"/>
+        <string ux:Property="Content"/>
+        <float  ux:Property="ContentFontSize"/>
+        <bool   ux:Property="Last"/>
+
+        <StackPanel>
+            <Text Color="White" Margin="0,0,0,0" FontSize="21" Value="{Property this.Title}"/>
+            <Text
+                Color="#dff"
+                Margin="0,2,0,8"
+                FontSize="{Property this.ContentFontSize}"
+                Value="{Property this.Content}"
+            />
+            <WhileFalse Value="{Property this.Last}">
+                <Rectangle Height="0.5" Color="#8cca"/>
+            </WhileFalse>
+        </StackPanel>
+    </Panel>
+
+    <DockPanel>
+        <Image Layer="Background" File="Assets/background.jpg" StretchMode="UniformToFill"/>
+
+        <StackPanel Alignment="TopCenter" Margin="20,40,20,20">
+            <Text Color="#fff" Margin="20,0,20,0"  FontSize="20" Value="about"  Alignment="Center"/>
+            <Text Color="#cff" Margin="20,0,20,10"  FontSize="32" Value="DEVICE" Alignment="Center"/>
+
+            <Rectangle Height="0.5" Color="#acc9" Margin="30,0,30,15"/>
+
+            <TextBlock Title="Name"   Content="{name}"/>
+            <TextBlock Title="UUID"   Content="{uuid}" ContentFontSize="13"/>
+            <TextBlock Title="Locale" Content="{locale}"/>
+            <TextBlock Title="Cores"  Content="{cores}"/>
+            <TextBlock Title="Retina" Content="{isRetina}" Last="true"/>
+        </StackPanel>
+    </DockPanel>
+</App>
