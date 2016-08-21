@@ -139,12 +139,12 @@ public sealed class Device : NativeModule {
         int macAdressId;
 
         try {
-            // try getting MAC-adress via NetworkInterface
+            // try to get MAC-adress via NetworkInterface
             final InetAddress ip = InetAddress.getLocalHost();
             final NetworkInterface network = NetworkInterface.getByInetAddress(ip);
             macAdressId = network.getHardwareAddress().hashCode();
         } catch (Throwable e) {
-            // else getting MAC-adress via WifiManager
+            // else get MAC-adress via WifiManager
             final WifiManager wifiManager = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
             final boolean     wifiEnabled = wifiManager.isWifiEnabled();
 
