@@ -380,11 +380,11 @@ public sealed class Device : NativeModule {
     [Foreign(Language.Java)]
     private static extern(Android) int GetNumProcessorCores()
     @{
+        int cores = 1;
         if (android.os.Build.VERSION.SDK_INT >= 17) {
-            return Runtime.getRuntime().availableProcessors();
+            cores = Runtime.getRuntime().availableProcessors();
         } else {
             try {
-                int cores = 1;
                 Process proc = Runtime.getRuntime().exec("/usr/bin/nproc");
                 BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
@@ -394,12 +394,11 @@ public sealed class Device : NativeModule {
 
                 input.close();
                 proc.waitFor();
-                return cores;
 
-            } finally {
-                return 1;
-            }
+            } catch (Throwable e) {}
         }
+
+        return cores;
     @}
 
 
