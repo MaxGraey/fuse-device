@@ -398,6 +398,11 @@ public sealed class Device : NativeModule {
             } catch (Throwable e) {}
         }
 
+        // in some devices any method return wrong huge number so we fix that case
+        if (cores > 8) {
+            cores = 4;
+        }
+
         return cores;
     @}
 
