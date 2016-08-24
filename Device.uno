@@ -157,21 +157,26 @@ public sealed class Device : NativeModule {
                 wifiManager.setWifiEnabled(false);
         }
 
-        long first  = ((long)macAdressId << 32)         + androidId.hashCode();
+        /*long first  = ((long)macAdressId << 32)         + androidId.hashCode();
         long second = ((long)deviceId.hashCode() << 32) + serialNum.hashCode();
 
         byte[] bytes = ByteBuffer.allocate(2 * Long.SIZE / Byte.SIZE)
           			   .putLong(first)
           			   .putLong(second)
                        .array();
-
-        byte[] hashedUUID = new byte[16];
+        */
+        byte[] bytes = ByteBuffer.allocate(16)
+                       .putInt(androidId.hashCode())
+                       .putInt(macAdressId)
+                       .putInt(serialNum.hashCode())
+                       .putInt(deviceId.hashCode())
+                       .array();
 
         try {
-            hashedUUID = MessageDigest.getInstance("MD5").digest(bytes);
+            bytes = MessageDigest.getInstance("MD5").digest(bytes);
         } catch (NoSuchAlgorithmException e) {}
 
-        return UUID.nameUUIDFromBytes(hashedUUID).toString().toUpperCase();
+        return UUID.nameUUIDFromBytes(bytes).toString().toUpperCase();
     @}
 
     [Foreign(Language.ObjC)]
