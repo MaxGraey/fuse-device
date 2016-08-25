@@ -172,9 +172,12 @@ public sealed class Device : NativeModule {
                        .putInt(deviceId.hashCode())
                        .array();
 
+        // UUID already apply MD5 alghoritm under the hood so don't need do it by self
+        /*
         try {
             bytes = MessageDigest.getInstance("MD5").digest(bytes);
         } catch (NoSuchAlgorithmException e) {}
+        */
 
         return UUID.nameUUIDFromBytes(bytes).toString().toUpperCase();
     @}
@@ -414,7 +417,7 @@ public sealed class Device : NativeModule {
     }
 
     private static extern(!(iOS || Android)) string GetModel() {
-		return "Preview";
+        return "Preview";
     }
 
     private static extern(!(iOS || Android)) string GetSystem() {
