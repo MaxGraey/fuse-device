@@ -55,59 +55,51 @@ public sealed class Device : NativeModule {
 
 
     public static string UUID() {
-        if (cachedUUID != null) {
-            return cachedUUID;
+        if (cachedUUID == null) {
+            cachedUUID = GetUUID();
         }
-        cachedUUID = GetUUID();
         return cachedUUID;
     }
 
     public static string Vendor() {
-        if (cachedVendorName != null) {
-            return cachedVendorName;
+        if (cachedVendorName == null) {
+            cachedVendorName = GetVendor();
         }
-        cachedVendorName = GetVendor();
         return cachedVendorName;
     }
 
     public static string Model() {
-        if (cachedModelName != null) {
-            return cachedModelName;
+        if (cachedModelName == null) {
+            cachedModelName = GetModel();
         }
-        cachedModelName = GetModel();
         return cachedModelName;
     }
 
     public static string System() {
-        if (cachedSystemName != null) {
-            return cachedSystemName;
+        if (cachedSystemName == null) {
+            cachedSystemName = GetSystem();
         }
-        cachedSystemName = GetSystem();
         return cachedSystemName;
     }
 
     public static string SystemVersion() {
-        if (cachedSystemVersion != null) {
-            return cachedSystemVersion;
+        if (cachedSystemVersion == null) {
+            cachedSystemVersion = GetSystemVersion();
         }
-        cachedSystemVersion = GetSystemVersion();
         return cachedSystemVersion;
     }
 
     public static string SDKVersion() {
-        if (cachedSDKVersion != null) {
-            return cachedSDKVersion;
+        if (cachedSDKVersion == null) {
+            cachedSDKVersion = GetSDKVersion();
         }
-        cachedSDKVersion = GetSDKVersion();
         return cachedSDKVersion;
     }
 
     public static double NumProcessorCores() {
-        if (cachedNumProcessorCores != 0f) {
-            return cachedNumProcessorCores;
+        if (cachedNumProcessorCores == 0f) {
+            cachedNumProcessorCores = (double)GetNumProcessorCores();
         }
-
-        cachedNumProcessorCores = (double)GetNumProcessorCores();
         return cachedNumProcessorCores;
     }
 
