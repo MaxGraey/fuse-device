@@ -277,7 +277,7 @@ public sealed class Device : NativeModule {
         return [language stringByReplacingOccurrencesOfString: @"_" withString: @"-"];
 	@}
 
-	public static extern(!(iOS || Android)) string GetCurrentLocale() {
+	public static extern(!Mobile) string GetCurrentLocale() {
 		return "en-EN";
     }
 
@@ -404,27 +404,27 @@ public sealed class Device : NativeModule {
 
     // Preview's implementations
 
-    private static extern(!(iOS || Android)) string GetVendor() {
+    private static extern(!Mobile) string GetVendor() {
         return "Fusetools";
     }
 
-    private static extern(!(iOS || Android)) string GetModel() {
+    private static extern(!Mobile) string GetModel() {
         return "Preview";
     }
 
-    private static extern(!(iOS || Android)) string GetSystem() {
+    private static extern(!Mobile) string GetSystem() {
         return "Fuse";
     }
 
-    private static extern(!(iOS || Android)) string GetSystemVersion() {
+    private static extern(!Mobile) string GetSystemVersion() {
         return "";
     }
 
-    private static extern(!(iOS || Android)) string GetSDKVersion() {
+    private static extern(!Mobile) string GetSDKVersion() {
         return "";
     }
 
-    private static extern(!(iOS || Android)) uint GetNumProcessorCores() {
+    private static extern(!Mobile) uint GetNumProcessorCores() {
         return 1;
     }
 }
