@@ -149,27 +149,12 @@ public sealed class Device : NativeModule {
                 wifiManager.setWifiEnabled(false);
         }
 
-        /*long first  = ((long)macAdressId << 32)         + androidId.hashCode();
-        long second = ((long)deviceId.hashCode() << 32) + serialNum.hashCode();
-
-        byte[] bytes = ByteBuffer.allocate(2 * Long.SIZE / Byte.SIZE)
-          			   .putLong(first)
-          			   .putLong(second)
-                       .array();
-        */
         byte[] bytes = ByteBuffer.allocate(16)
                        .putInt(androidId.hashCode())
                        .putInt(macAdressId)
                        .putInt(serialNum.hashCode())
                        .putInt(deviceId.hashCode())
                        .array();
-
-        // UUID already apply MD5 alghoritm under the hood so don't need do it by self
-        /*
-        try {
-            bytes = MessageDigest.getInstance("MD5").digest(bytes);
-        } catch (NoSuchAlgorithmException e) {}
-        */
 
         return UUID.nameUUIDFromBytes(bytes).toString().toUpperCase();
     @}
