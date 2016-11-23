@@ -10,6 +10,9 @@ Using [fusepm](https://github.com/bolav/fusepm)
 
     $ fusepm install https://github.com/MaxGraey/fuse-device
 
+Or manually copy **Device.uno** to your project and add link in .unoproj.
+See example: https://github.com/MaxGraey/fuse-device/tree/master/example
+
 ### Support
 - **iOS**
 - **Android**
