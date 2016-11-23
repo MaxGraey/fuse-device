@@ -8,7 +8,7 @@ using Fuse;
 using Fuse.Scripting;
 using Fuse.Reactive;
 
-[ForeignInclude(Language.Java, "android.app.Activity",
+[extern(Android) ForeignInclude(Language.Java, "android.app.Activity",
                                "android.provider.Settings",
                                "android.telephony.TelephonyManager",
                                "android.content.*",
@@ -20,7 +20,7 @@ using Fuse.Reactive;
                                "java.nio.*",
                                "java.io.*")]
 
-[ForeignInclude(Language.ObjC, "sys/types.h", "sys/sysctl.h")]
+[extern(iOS) ForeignInclude(Language.ObjC, "sys/types.h", "sys/sysctl.h")]
 
 [UXGlobalModule]
 public sealed class Device : NativeModule {
