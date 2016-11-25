@@ -165,28 +165,6 @@ public sealed class Device : NativeModule {
         return [NSUUID.UUID UUIDString]; // iOS >= 6.x
     @}
 
-    // Preview version
-    // UUID generate randomly every launch time
-    private static extern(!(iOS || Android)) string GetUUID() {
-        // According to RFC 4122 version 4
-        Random rnd = new Random((int)(Time.FrameTime + 34525));
-        byte[] bytes = new byte[16];
-        const string chars = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
-        int len = chars.Length;
-        for (int i = 0; i < 16; ++i)
-            bytes[i] = (byte)(chars[rnd.NextInt(len)]);
-
-        bytes[6] = (bytes[6] & 0xF)  | 0x40;
-        bytes[8] = (bytes[8] & 0x3F) | 0x80;
-
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < 16; ++i)
-            result.Append(String.Format("{0:X}", bytes[i]));
-
-        return result.ToString().Insert(8,  "-").Insert(13, "-")
-                                .Insert(18, "-").Insert(23, "-");
-    }
-
 
     [Foreign(Language.Java)]
 	public static extern(Android) string GetCurrentLocale()
@@ -261,11 +239,6 @@ public sealed class Device : NativeModule {
 
         return [language stringByReplacingOccurrencesOfString: @"_" withString: @"-"];
 	@}
-
-	public static extern(!Mobile) string GetCurrentLocale() {
-		return "en-EN";
-    }
-
 
     // iOS's foreign implementations
 
@@ -388,6 +361,31 @@ public sealed class Device : NativeModule {
 
 
     // Preview's implementations
+
+    // UUID generate randomly every launch time
+    private static extern(!Mobile) string GetUUID() {
+        // According to RFC 4122 version 4
+        Random rnd = new Random((int)(Time.FrameTime + 34525));
+        byte[] bytes = new byte[16];
+        const string chars = "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
+        int len = chars.Length;
+        for (int i = 0; i < 16; ++i)
+            bytes[i] = (byte)(chars[rnd.NextInt(len)]);
+
+        bytes[6] = (bytes[6] & 0xF)  | 0x40;
+        bytes[8] = (bytes[8] & 0x3F) | 0x80;
+
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < 16; ++i)
+            result.Append(String.Format("{0:X}", bytes[i]));
+
+        return result.ToString().Insert(8,  "-").Insert(13, "-")
+                                .Insert(18, "-").Insert(23, "-");
+    }
+
+    public static extern(!Mobile) string GetCurrentLocale() {
+		return "en-EN";
+    }
 
     private static extern(!Mobile) string GetVendor() {
         return "Fusetools";
