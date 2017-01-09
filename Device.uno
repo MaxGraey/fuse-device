@@ -162,7 +162,8 @@ public sealed class Device : NativeModule {
     [Foreign(Language.ObjC)]
     private static extern(iOS) string GetUUID()
     @{
-        return [NSUUID.UUID UUIDString]; // iOS >= 6.x
+        //return [NSUUID.UUID UUIDString]; // iOS >= 6.x
+        return [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     @}
 
 
