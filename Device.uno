@@ -162,15 +162,14 @@ public sealed class Device : NativeModule {
     [Foreign(Language.ObjC)]
     private static extern(iOS) string GetUUID()
     @{
-        //return [NSUUID.UUID UUIDString]; // iOS >= 6.x
         return [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     @}
 
 
     [Foreign(Language.Java)]
-	public static extern(Android) string GetCurrentLocale()
-	@{
-		Locale loc = java.util.Locale.getDefault();
+    public static extern(Android) string GetCurrentLocale()
+    @{
+	Locale loc = java.util.Locale.getDefault();
 
         final char separator = '-';
         String language = loc.getLanguage();
@@ -215,12 +214,12 @@ public sealed class Device : NativeModule {
         }
 
         return bcp47Tag.toString();
-	@}
+    @}
 
-	[Foreign(Language.ObjC)]
-	private static extern(iOS) string GetCurrentLocale()
-	@{
-		NSString* language = NSLocale.preferredLanguages[0];
+    [Foreign(Language.ObjC)]
+    private static extern(iOS) string GetCurrentLocale()
+    @{
+        NSString* language = NSLocale.preferredLanguages[0];
 
         if (language.length <= 2) {
             NSLocale* locale        = NSLocale.currentLocale;
@@ -239,7 +238,7 @@ public sealed class Device : NativeModule {
         }
 
         return [language stringByReplacingOccurrencesOfString: @"_" withString: @"-"];
-	@}
+    @}
 
     // iOS's foreign implementations
 
