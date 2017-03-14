@@ -384,7 +384,7 @@ public sealed class Device : NativeModule {
     }
 
     public static extern(!Mobile) string GetCurrentLocale() {
-		return "en-EN";
+	return "en-EN";
     }
 
     private static extern(!Mobile) string GetVendor() {
