@@ -37,7 +37,7 @@ public sealed class Device : NativeModule {
 
     public Device() : base() {
         if (_instance != null) return;
-        Resource.SetGlobalKey(_instance = this, "Device");
+        Uno.UX.Resource.SetGlobalKey(_instance = this, "Device");
 
         AddMember(new NativeProperty< string, object >("vendor", Vendor));
         AddMember(new NativeProperty< string, object >("model", Model));
