@@ -3,7 +3,6 @@
         var Observable = require('FuseJS/Observable');
         var Device     = require('Device');
 
-        console.log('UUID:',   Device.UUID);
         console.log('locale:', Device.locale);
         console.log('system:', Device.system + " " + Device.systemVersion);
         console.log('SDK:',    Device.SDKVersion);
@@ -11,9 +10,18 @@
         console.log('cores:',  Device.cores);
         console.log('retina:', Device.isRetina);
 
+        // async getUUID
+        var uuid = Observable("");
+        Device.getUUID().then(function(x) {
+            console.log('UUID: ' + x);
+            uuid.value = x;
+        }).catch(function(error) {
+            console.log('UUID error: ' + error);
+        });
+
         module.exports = {
             name:     Device.vendor + " " + Device.model,
-            uuid:     Device.UUID,
+            uuid:     uuid,
             locale:   Device.locale,
             cores:    Device.cores,
             isRetina: Device.isRetina
