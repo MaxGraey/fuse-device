@@ -27,6 +27,10 @@ See example: https://github.com/MaxGraey/fuse-device/tree/master/example
     console.log('Current device language: ' + Device.locale); // format in BCP-47 for all mobile platforms
     // output example: en-US
     
+    console.log('UUID:'                + Device.UUID);
+    // output example:
+    // UUID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+
     console.log('Vendor name: '        + Device.vendor);
     console.log('Model name: '         + Device.model);
     console.log('System: '             + Device.system);
@@ -37,18 +41,22 @@ See example: https://github.com/MaxGraey/fuse-device/tree/master/example
 ```
 
 Since reading UUID in Android requires a run-time permission to `READ_PHONE_STATE`,
-the UUID is not accessible as a static property on `Device`. Instead, UUID is returned
-in a promise from `getUUID()` method on all target platforms.
+the UUID might not always be accessible via `Device.UUID` directly. To work around that,
+there is a `getUUID()` method that returns the UUID in a promise.
+
+For convenience, `getUUID()` is available on all target platforms, but it only triggers the permission request on Android.
 
 ```js
     var Device = require('Device');
-    Device.getUUID().then(function(uuid) {
-        console.log('UUID: ' + uuid);
-        // output example:
-        // UUID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-    }).catch(function(error) {
-        console.log('UUID error: ' + error);
-        // output example:
-        // UUID error: Permissions could not be requested or granted.
-    });
+    if (Device.UUID == '') {
+        Device.getUUID().then(function(uuid) {
+            console.log('UUID: ' + uuid);
+            // output example:
+            // UUID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+        }).catch(function(error) {
+            console.log('UUID error: ' + error);
+            // output example:
+            // UUID error: Permissions could not be requested or granted.
+        });
+    }
 ```

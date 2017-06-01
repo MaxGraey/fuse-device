@@ -28,6 +28,7 @@ using Fuse.Reactive;
 public sealed class Device : NativeModule {
     static readonly Device _instance;
 
+    static string cachedUUID;
     static string cachedVendorName;
     static string cachedModelName;
     static string cachedSystemName;
@@ -47,6 +48,7 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< double, object >("cores", NumProcessorCores));
         AddMember(new NativeProperty< double, object >("displayScale", PixelsPerPoint));
         AddMember(new NativeProperty< bool,   object >("isRetina", IsRetina));
+        AddMember(new NativeProperty< string, object >("UUID", UUID));
 
         // [language]-[region]-[variants] (e.g. zh-EN-Hans, en-US, etc.)
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale));
@@ -84,12 +86,33 @@ public sealed class Device : NativeModule {
 
     private static extern(Android) void AuthorizeResolved(PlatformPermission permission)
     {
-        _authorizePromise.Resolve(GetUUID());
+        if (cachedUUID == null) {
+            cachedUUID = GetUUID();
+        }
+        _authorizePromise.Resolve(cachedUUID);
     }
 
     private static extern(Android) void AuthorizeRejected(Exception reason)
     {
         _authorizePromise.Reject(reason);
+    }
+
+
+
+
+    public static extern(!Android) string UUID() {
+        if (cachedUUID == null) {
+            cachedUUID = GetUUID();
+        }
+        return cachedUUID;
+    }
+
+    public static extern(Android) string UUID() {
+        if (cachedUUID == null) {
+            debug_log("Permissions not granted. Consider using Device.getUUID() instead.");
+            return "";
+        }
+        return cachedUUID;
     }
 
 
