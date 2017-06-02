@@ -11,12 +11,27 @@
         console.log('cores:',  Device.cores);
         console.log('retina:', Device.isRetina);
 
+        var asyncUUID = Observable("");
+        setTimeout(function() {
+            if (Device.UUID == '') {
+                Device.getUUID().then(function(uuid) {
+                    console.log('getUUID: ' + uuid);
+                    asyncUUID.value = uuid;
+                }).catch(function(error) {
+                    console.log('getUUID error: ' + error);
+                });
+            } else {
+                asyncUUID.value = Device.UUID;
+            }
+        }, 2000);
+
         module.exports = {
-            name:     Device.vendor + " " + Device.model,
-            uuid:     Device.UUID,
-            locale:   Device.locale,
-            cores:    Device.cores,
-            isRetina: Device.isRetina
+            name:      Device.vendor + " " + Device.model,
+            UUID:      Device.UUID,
+            asyncUUID: asyncUUID,
+            locale:    Device.locale,
+            cores:     Device.cores,
+            isRetina:  Device.isRetina
         };
     </JavaScript>
 
@@ -50,7 +65,8 @@
             <Rectangle Height="0.5" Color="#acc9" Margin="30,0,30,15"/>
 
             <TextBlock Title="Name"   Content="{name}"/>
-            <TextBlock Title="UUID"   Content="{uuid}" ContentFontSize="13"/>
+            <TextBlock Title="UUID"   Content="{UUID}" ContentFontSize="13"/>
+            <TextBlock Title="Async UUID"   Content="{asyncUUID}" ContentFontSize="13"/>
             <TextBlock Title="Locale" Content="{locale}"/>
             <TextBlock Title="Cores"  Content="{cores}"/>
             <TextBlock Title="Retina" Content="{isRetina}" Last="true"/>

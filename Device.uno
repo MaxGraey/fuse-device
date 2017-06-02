@@ -3,6 +3,8 @@ using Uno.UX;
 using Uno.Text;
 using Uno.Collections;
 using Uno.Compiler.ExportTargetInterop;
+using Uno.Permissions;
+using Uno.Threading;
 
 using Fuse;
 using Fuse.Scripting;
@@ -26,14 +28,13 @@ using Fuse.Reactive;
 public sealed class Device : NativeModule {
     static readonly Device _instance;
 
+    static string cachedUUID;
     static string cachedVendorName;
     static string cachedModelName;
     static string cachedSystemName;
     static string cachedSystemVersion;
     static string cachedSDKVersion;
     static double cachedNumProcessorCores = 0f;
-
-    static string cachedUUID;
 
     public Device() : base() {
         if (_instance != null) return;
@@ -47,19 +48,75 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< double, object >("cores", NumProcessorCores));
         AddMember(new NativeProperty< double, object >("displayScale", PixelsPerPoint));
         AddMember(new NativeProperty< bool,   object >("isRetina", IsRetina));
-
         AddMember(new NativeProperty< string, object >("UUID", UUID));
+
         // [language]-[region]-[variants] (e.g. zh-EN-Hans, en-US, etc.)
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale));
+
+        // async getUUID implementation
+        AddMember(new NativePromise<string, string>("getUUID", AsyncUUID, null));
     }
 
 
-    public static string UUID() {
+
+
+    Future<string> AsyncUUID (object[] args)
+    {
+        return AsyncUUIDImpl();
+    }
+
+    public static extern(!Android) Future<string> AsyncUUIDImpl()
+    {
+        var p = new Promise<string>();
+        p.Resolve(GetUUID());
+        return p;
+    }
+
+    static extern(Android) Promise<string> _authorizePromise;
+
+    public static extern(Android) Future<string> AsyncUUIDImpl()
+    {
+        if (_authorizePromise == null)
+        {
+            _authorizePromise = new Promise<string>();
+            Permissions.Request(Permissions.Android.READ_PHONE_STATE).Then(AuthorizeResolved, AuthorizeRejected);
+        }
+        return _authorizePromise;
+    }
+
+    private static extern(Android) void AuthorizeResolved(PlatformPermission permission)
+    {
+        if (cachedUUID == null) {
+            cachedUUID = GetUUID();
+        }
+        _authorizePromise.Resolve(cachedUUID);
+    }
+
+    private static extern(Android) void AuthorizeRejected(Exception reason)
+    {
+        _authorizePromise.Reject(reason);
+    }
+
+
+
+
+    public static extern(!Android) string UUID() {
         if (cachedUUID == null) {
             cachedUUID = GetUUID();
         }
         return cachedUUID;
     }
+
+    public static extern(Android) string UUID() {
+        if (cachedUUID == null) {
+            debug_log("Permissions not granted. Consider using Device.getUUID() instead.");
+            return "";
+        }
+        return cachedUUID;
+    }
+
+
+
 
     public static string Vendor() {
         if (cachedVendorName == null) {
@@ -169,7 +226,7 @@ public sealed class Device : NativeModule {
     [Foreign(Language.Java)]
     public static extern(Android) string GetCurrentLocale()
     @{
-	Locale loc = java.util.Locale.getDefault();
+    Locale loc = java.util.Locale.getDefault();
 
         final char separator = '-';
         String language = loc.getLanguage();
@@ -384,7 +441,7 @@ public sealed class Device : NativeModule {
     }
 
     public static extern(!Mobile) string GetCurrentLocale() {
-	return "en-EN";
+    return "en-EN";
     }
 
     private static extern(!Mobile) string GetVendor() {
