@@ -10,8 +10,7 @@ Using [fusepm](https://github.com/bolav/fusepm)
 
     $ fusepm install https://github.com/MaxGraey/fuse-device
 
-Or manually copy **Device.uno** to your project and add link in .unoproj.
-See example: https://github.com/MaxGraey/fuse-device/tree/master/example
+Or manually copy **Device.uno** to your project and add link in .unoproj [see example](https://github.com/MaxGraey/fuse-device/tree/master/example)
 
 ### Support
 - **iOS**
@@ -26,7 +25,7 @@ See example: https://github.com/MaxGraey/fuse-device/tree/master/example
 
     console.log('Current device language: ' + Device.locale); // format in BCP-47 for all mobile platforms
     // output example: en-US
-    
+
     console.log('UUID:'                + Device.UUID);
     // output example:
     // UUID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
