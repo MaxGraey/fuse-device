@@ -59,7 +59,7 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale));
     }
 
-    Future<string> AsyncUUID(object[] args) {
+    public Future<string> AsyncUUID(object[] args) {
         return AsyncUUIDImpl();
     }
 
