@@ -36,6 +36,8 @@ public sealed class Device : NativeModule {
     static string cachedSDKVersion;
     static double cachedNumProcessorCores = 0f;
 
+    static extern(Android) Promise<string> _authorizePromise;
+
     public Device() : base() {
         if (_instance != null) return;
         Uno.UX.Resource.SetGlobalKey(_instance = this, "Device");
@@ -50,55 +52,41 @@ public sealed class Device : NativeModule {
         AddMember(new NativeProperty< bool,   object >("isRetina", IsRetina));
         AddMember(new NativeProperty< string, object >("UUID", UUID));
 
+        // async getUUID implementation
+        AddMember(new NativePromise< string, string >("getUUID", AsyncUUID, null));
+
         // [language]-[region]-[variants] (e.g. zh-EN-Hans, en-US, etc.)
         AddMember(new NativeProperty< string, object >("locale", GetCurrentLocale));
-
-        // async getUUID implementation
-        AddMember(new NativePromise<string, string>("getUUID", AsyncUUID, null));
     }
 
-
-
-
-    Future<string> AsyncUUID (object[] args)
-    {
+    Future<string> AsyncUUID(object[] args) {
         return AsyncUUIDImpl();
     }
 
-    public static extern(!Android) Future<string> AsyncUUIDImpl()
-    {
+    public static extern(!Android) Future<string> AsyncUUIDImpl() {
         var p = new Promise<string>();
         p.Resolve(GetUUID());
         return p;
     }
 
-    static extern(Android) Promise<string> _authorizePromise;
-
-    public static extern(Android) Future<string> AsyncUUIDImpl()
-    {
-        if (_authorizePromise == null)
-        {
+    public static extern(Android) Future<string> AsyncUUIDImpl() {
+        if (_authorizePromise == null) {
             _authorizePromise = new Promise<string>();
             Permissions.Request(Permissions.Android.READ_PHONE_STATE).Then(AuthorizeResolved, AuthorizeRejected);
         }
         return _authorizePromise;
     }
 
-    private static extern(Android) void AuthorizeResolved(PlatformPermission permission)
-    {
+    private static extern(Android) void AuthorizeResolved(PlatformPermission permission) {
         if (cachedUUID == null) {
             cachedUUID = GetUUID();
         }
         _authorizePromise.Resolve(cachedUUID);
     }
 
-    private static extern(Android) void AuthorizeRejected(Exception reason)
-    {
+    private static extern(Android) void AuthorizeRejected(Exception reason) {
         _authorizePromise.Reject(reason);
     }
-
-
-
 
     public static extern(!Android) string UUID() {
         if (cachedUUID == null) {
@@ -114,8 +102,6 @@ public sealed class Device : NativeModule {
         }
         return cachedUUID;
     }
-
-
 
 
     public static string Vendor() {
